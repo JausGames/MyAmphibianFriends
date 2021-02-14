@@ -7,7 +7,7 @@ using System.Linq;
 public class EnnemyController : MonoBehaviour
 {
     [SerializeField] float lookRadius = 15f;
-    [SerializeField] float attackRadius = 1.3f;
+    [SerializeField] float attackRadius = 1.4f;
     [SerializeField] float attackTimer = 0.4f;
     [SerializeField] bool canMove = true;
 
@@ -15,11 +15,17 @@ public class EnnemyController : MonoBehaviour
     [SerializeField] NavMeshAgent agent;
     [SerializeField] EnemyHands hands;
 
+    [SerializeField] GameObject visual;
     [SerializeField] private Vector3 startPosition;
     [SerializeField] private Vector3 direction;
     [SerializeField] private Vector3 attackPoint;
     [SerializeField] private float timeInRange = 0f;
     [SerializeField] private float startTimer = 1f;
+    [SerializeField] private MonkeyAnimatorController animator;
+    void Awake()
+    {
+        animator = gameObject.AddComponent<MonkeyAnimatorController>();
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -28,6 +34,7 @@ public class EnnemyController : MonoBehaviour
         hands = GetComponentInChildren<EnemyHands>();
         startPosition = transform.position;
         GetRandom();
+        hands.SetPoint(transform.forward * 2f);
     }
 
     // Update is called once per frame
@@ -38,12 +45,16 @@ public class EnnemyController : MonoBehaviour
         {
             agent.SetDestination(target.position - direction * 1.3f);
             direction = (target.position - transform.position).normalized;
-            attackPoint = transform.position + direction * 1.3f;
-            hands.SetPoint(attackPoint);
+            var magn = (target.position - transform.position).magnitude;
+            attackPoint = transform.position + direction * attackRadius;
+            if (magn > attackRadius * 1.5f) hands.SetPoint(attackPoint + direction * 0.7f);
+            else hands.SetPoint(attackPoint);
             startTimer += Time.deltaTime;
             return;
         }
-        if (agent.speed < 10f) agent.speed += 0.05f * Time.deltaTime;
+        if (agent.speed < 6f) agent.speed += 0.05f * Time.deltaTime;
+        if (GetComponent<Rigidbody>().velocity.magnitude < 1f) animator.SetWalk(false);
+        else animator.SetWalk(true);
 
         //Set target
         var distances = new List<float>();
@@ -57,8 +68,10 @@ public class EnnemyController : MonoBehaviour
         target = PlayerManager.instance.alive[index].transform;
         
         direction = (target.position - transform.position).normalized;
+        var magn2 = (target.position - transform.position).magnitude;
         attackPoint = transform.position + direction * attackRadius;
-        hands.SetPoint(attackPoint);
+        if (magn2 > attackRadius * 1.5f) hands.SetPoint(attackPoint + direction * 0.7f);
+        else hands.SetPoint(attackPoint);
         float distance = Vector3.Distance(target.position, transform.position + Vector3.forward * attackRadius);
 
         if (distance <= lookRadius)
@@ -77,10 +90,15 @@ public class EnnemyController : MonoBehaviour
         if (distance <= attackRadius)
         {
             timeInRange += Time.deltaTime;
-            if (timeInRange >= attackTimer) Attack(target.gameObject.GetComponent<Player>());
+            if (timeInRange >= attackTimer)
+            {
+                Attack(target.gameObject.GetComponent<Player>());
+            }
+            animator.SetAttack(true);
         }
         else
         {
+            animator.SetAttack(false);
             timeInRange = 0;
         }
     }
@@ -97,6 +115,8 @@ public class EnnemyController : MonoBehaviour
         Gizmos.DrawSphere(transform.position, lookRadius);
         Gizmos.color = new Color(1, 0, 0, 0.2f);
         Gizmos.DrawSphere(attackPoint, attackRadius);
+        Gizmos.color = new Color(1, 0, 0, 1f);
+        Gizmos.DrawLine(transform.position + direction * 1.3f, transform.position + direction * 1.3f + direction *1.3f);
     }
     void Attack(Player player)
     {

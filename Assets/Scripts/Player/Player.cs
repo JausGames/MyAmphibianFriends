@@ -11,6 +11,7 @@ public class Player : MonoBehaviour
     [SerializeField] public PlayerController controller = null;
     [SerializeField] public Healthometer healthometer = null;
     [SerializeField] public Transform visual;
+    [SerializeField] public List<Renderer> renderers;
     [SerializeField] public PlayerParticleManager particles;
     // Start is called before the first frame update
     void Awake()

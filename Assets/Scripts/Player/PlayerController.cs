@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Rigidbody body;
     [SerializeField] private Transform front;
     [SerializeField] private bool onFloor = false;
+    [SerializeField] private PlayerAnimatorController animator;
 
     [SerializeField] private float rotationSpeed = 50f;
     [SerializeField] private float jumpSpeed = 80f;
@@ -21,6 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int jumpNumber = 2;
     void Awake()
     {
+        animator = gameObject.AddComponent<PlayerAnimatorController>();
         visual = transform.Find("Visual");
         body = GetComponent<Rigidbody>();
         front = visual.transform.Find("Front");
@@ -59,11 +61,11 @@ public class PlayerController : MonoBehaviour
             Debug.Log("PlayerController, Update : Jump 1");
             Jump((front.position - visual.position + 2f * Vector3.up) * jumpSpeed * charging);
         }
-        if (!jump && charging > 0.2f && jumpNumber != 0)
+        /*if (!jump && charging > 0.2f && jumpNumber != 0)
         {
             Debug.Log("PlayerController, Update : Jump 2");
             Jump(((front.position - visual.position) * 1.7f + Vector3.up) * jumpSpeed * charging);
-        }
+        }*/
 
         if (jump)
         {
@@ -105,10 +107,12 @@ public class PlayerController : MonoBehaviour
     public void SetJump(bool value)
     {
         jump = value;
+        if (value) animator.StartCharge();
     }
 
     void Jump(Vector3 dir)
     {
+        animator.StartJump();
         Debug.Log("Move : " + dir);
         StopMotion();
         body.AddForce(dir);

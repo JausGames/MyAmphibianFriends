@@ -67,7 +67,11 @@ public class PlayerManager : MonoBehaviour
             bar.GetComponent<Healthometer>().setPlayer(players[i]);
             bar.GetComponent<Healthometer>().setMaxHealth(200f);
             //Set Color to player and Healthbar
-            players[i].visual.GetComponent<Renderer>().material = materials[i];
+            foreach(Renderer rend in players[i].renderers)
+            {
+                rend.GetComponent<Renderer>().material = materials[i];
+            }
+
             var fill = bar.transform.Find("fill").gameObject;
             fill.GetComponent<Image>().color = UIColor.instance.GetColorByString(materials[i].name);
             var hearth = bar.transform.Find("hearth").gameObject;
